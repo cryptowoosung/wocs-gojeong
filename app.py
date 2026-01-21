@@ -112,9 +112,7 @@ with st.sidebar:
     use_print = st.checkbox("로고 인쇄 (1도/1면)")
     print_price = st.number_input("인쇄비 (원)", value=0 if not use_print else 100000, step=10000, disabled=not use_print)
     
-    # ★★★ 물받이 가격 입력란 추가 (수정된 부분) ★★★
     use_gutter = st.checkbox("물받이 설치")
-    # 기본값은 m당 1만원으로 계산하되, 사용자가 수정 가능하도록 설정
     default_gutter_price = int(width_input * 10000)
     gutter_price = st.number_input("물받이 가격 (원)", value=0 if not use_gutter else default_gutter_price, step=5000, disabled=not use_gutter)
 
@@ -153,7 +151,6 @@ with st.sidebar:
 # -----------------------------------------------------------------------------
 base_price = int(calc_width * unit_price)
 
-# 합계 계산
 sub_total = (base_price + fabric_add_price + light_price + print_price + gutter_price +
              labor_price + material_price + transport_price +
              remove_price + ladder_price + bracket_price + special_wall_price + pole_price + night_price)
@@ -162,7 +159,6 @@ vat = int(sub_total * 0.1)
 total_price = sub_total + vat
 today_str = datetime.datetime.now().strftime("%Y-%m-%d")
 
-# 견적서 스펙 텍스트
 spec_info_text = f"{shape_type} ({selected_spec})"
 if width_input < min_width:
     spec_info_text += f" / {width_input}m (최소 {min_width}m 적용)"
@@ -178,7 +174,6 @@ if uploaded_logo is not None:
     encoded = base64.b64encode(image_bytes).decode()
     logo_html = f'<img src="data:image/png;base64,{encoded}" style="max-height: 80px; max-width: 200px; margin-right: 20px;">'
 
-# 도장 HTML
 stamp_html = """
 <div style="
     display: inline-block;
@@ -227,7 +222,6 @@ html_content = f"""
 </div>
 """
 
-# 옵션 항목들 출력
 if fabric_add_price > 0:
     html_content += f"""<div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee;"><span>🧵 원단 추가 ({fabric_type})</span><span>+{fabric_add_price:,} 원</span></div>"""
 if use_print and print_price > 0:
@@ -237,7 +231,6 @@ if use_light and light_price > 0:
 if use_gutter and gutter_price > 0:
     html_content += f"""<div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee;"><span>💧 물받이 설치</span><span>+{gutter_price:,} 원</span></div>"""
 
-# 현장 특수 항목
 if use_remove and remove_price > 0:
     html_content += f"""<div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee;"><span>🏗️ 기존 철거</span><span>+{remove_price:,} 원</span></div>"""
 if use_ladder and ladder_price > 0:
@@ -251,7 +244,6 @@ if use_pole and pole_price > 0:
 if use_night and night_price > 0:
     html_content += f"""<div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee;"><span>🌙 야간/주말 할증</span><span>+{night_price:,} 원</span></div>"""
 
-# 고정 비용
 html_content += f"""<div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee;"><span>👷 시공 노무비</span><span>+{labor_price:,} 원</span></div>"""
 if material_price > 0:
     html_content += f"""<div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee;"><span>🔩 부자재비용</span><span>+{material_price:,} 원</span></div>"""
@@ -268,7 +260,8 @@ html_content += f"""
 <div style="margin-top: 30px; font-size: 14px; color: #555; border-top: 1px dashed #ccc; padding-top: 20px;">
 {'<strong>※ 특이사항:</strong> ' + note_input + '<br>' if note_input else ''}
 <strong>1. 견적 유효기간:</strong> 견적일로부터 10일<br>
-<strong>2. 하자 보증기간:</strong> 납품일로부터 1년 (천재지변 및 사용자 과실 제외)
+<strong>2. 하자 보증기간:</strong> 납품일로부터 1년 (천재지변 및 사용자 과실 제외)<br>
+<strong style="color:red;">3. 결제방법:</strong> 선금 50% / 잔금 50% (시공 완료 즉시)
 </div>
 <br><br>
 <div style="text-align:center; color:#888; font-size:13px;">귀하의 무궁한 발전을 기원합니다.</div>
@@ -328,6 +321,7 @@ def create_image():
     draw.text((stamp_x + 8, stamp_y + 18), "우", font=font_Stamp, fill="red")
     draw.text((stamp_x + 8, stamp_y + 32), "성", font=font_Stamp, fill="red")
 
+    # 정보
     text_start_y = 245
     draw.text((450, text_start_y), f"사업자번호: {MY_BUSINESS_NUM}", font=font_S, fill="black")
     draw.text((450, text_start_y + 25), "전남 화순군 사평면 유마로 592", font=font_S, fill="black")
@@ -382,6 +376,10 @@ def create_image():
     draw.text((50, y), "1. 견적 유효기간: 견적일로부터 10일", font=font_S, fill="gray")
     y += 30
     draw.text((50, y), "2. 하자 보증기간: 납품일로부터 1년 (천재지변 및 사용자 과실 제외)", font=font_S, fill="gray")
+    
+    # ★★★ 결제조건 추가됨 ★★★
+    y += 30
+    draw.text((50, y), "3. 결제방법: 선금 50% / 잔금 50% (시공 완료 즉시)", font=font_S, fill="black")
     
     y += 50
     draw.line((50, y, 750, y), fill="gray", width=1)
